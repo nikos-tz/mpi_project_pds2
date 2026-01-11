@@ -12,14 +12,18 @@ DEPENDENCIES = src/distribute_by_median.c src/functions.c
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)
 
+.PHONY: all clean datasets rand
+
+all: datasets rand
+
 datasets: $(EXECUTABLES_DATASETS)
 
-$(BUILD_DIR)/main_datasets.out: $(BUILD_DIR) src/main_datasets.c $(DEPENDENCIES)
+$(BUILD_DIR)/main_datasets.out: src/main_datasets.c $(DEPENDENCIES) | $(BUILD_DIR)
 	$(CC) $(CFLAGS) $^ -o $@ -lm
 
 rand: $(EXECUTABLES_RAND)
 
-$(BUILD_DIR)/main_rand.out: $(BUILD_DIR) src/main_rand.c $(DEPENDENCIES)
+$(BUILD_DIR)/main_rand.out: src/main_rand.c $(DEPENDENCIES) | $(BUILD_DIR)
 	$(CC) $(CFLAGS) $^ -o $@ -lm
 
 clean:
