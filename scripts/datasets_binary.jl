@@ -19,10 +19,10 @@ function write_matrix_binary(A::AbstractMatrix{Float64}, filename::String)
     end
 end
 
-file_path = "/tmp/mnist.bin";
+file_path = "/tmp/julia_datasets/mnist.bin";
 dimension = 28;
 
-train_x, _ = MNIST.traindata()
-test_x,  _ = MNIST.testdata()
+train_x, _ = MNIST(split=:train)[:]
+test_x, _  = MNIST(split=:test)[:]
 X = Float64.( [reshape(train_x,dimension*dimension,:) reshape(test_x,dimension*dimension,:)] )
 write_matrix_binary(X, file_path)
