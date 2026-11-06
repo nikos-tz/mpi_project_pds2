@@ -20,7 +20,7 @@ int main( int argc, char** argv ) {
 
     FILE* fp = NULL;
     /* insert here the path to your dataset file */
-    fp = fopen("/tmp/julia_datasets/rand.bin", "r");
+    fp = fopen("/tmp/datasets/rand.bin", "r");
 
     /* number of points and dimension of points */
     int n, d;
