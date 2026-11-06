@@ -13,7 +13,7 @@
 #include <time.h>
 #include "distribute_by_median.h"
 #include "functions.h"
-
+#include "write_data.h"
 
 
 int main( int argc, char** argv ) {
@@ -232,7 +232,26 @@ int main( int argc, char** argv ) {
     }
 
 
+    /* Write each process's local data */
 
+    char filename[100];
+
+    sprintf(filename, "proc_data_rank_%d.bin", self_id);
+
+    if (write_proc_data(filename, points_per_process, d, proc_data) != 0) {
+        printf("Rank %d: Error writing proc_data\n", self_id);
+    }
+
+
+    /* Only the leader writes the pivot */
+
+    if (self_id == leader) {
+
+        if (write_pivot("pivot.bin", d, pivot) != 0) {
+            printf("Error writing pivot\n");
+        }
+
+    }
 
 
 
