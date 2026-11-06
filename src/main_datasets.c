@@ -16,11 +16,23 @@
 
 
 
-int main( int argc, char** argv ) {
+int main(int argc, char** argv) {
+
+    /* Check that the filename was provided */
+    if (argc != 2) {
+        fprintf(stderr, "Usage: %s <input_file>\n", argv[0]);
+        return EXIT_FAILURE;
+    }
 
     FILE* fp = NULL;
-    /* insert here the path to your dataset file */
-    fp = fopen("/tmp/datasets/rand.bin", "r");
+
+    /* Open the dataset file provided as an argument */
+    fp = fopen(argv[1], "rb");
+
+    if (fp == NULL) {
+        perror("Error opening input file");
+        return EXIT_FAILURE;
+    }
 
     /* number of points and dimension of points */
     int n, d;
@@ -29,11 +41,11 @@ int main( int argc, char** argv ) {
     int tag = 1;
     int num_tasks;
     int self_id;
-    int leader = 0; // leader task
+    int leader = 0;
 
     /* initialise the communicator */
     MPI_Status status;
-    MPI_Init (&argc,&argv);
+    MPI_Init(&argc, &argv);
     MPI_Comm_size (MPI_COMM_WORLD,&num_tasks);
     MPI_Comm_rank (MPI_COMM_WORLD,&self_id);
 
