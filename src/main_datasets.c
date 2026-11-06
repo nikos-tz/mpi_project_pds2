@@ -11,6 +11,8 @@
 #include "distribute_by_median.h"
 #include "functions.h"
 #include "write_data.h"
+#include "delete_directory.h"
+
 
 
 
@@ -235,11 +237,19 @@ int main( int argc, char** argv ) {
 
     /* Write each process's local data */
 
+    if(self_id == leader){
+      if (delete_directory("proc_data") != 0) {
+        fprintf(stderr, "Could not delete proc_data directory\n");
+      }
+    }
+
+    MPI_Barrier(MPI_COMM_WORLD);
+
     char filename[100];
 
     sprintf(filename, "proc_data_rank_%d.bin", self_id);
 
-    if (write_proc_data("proc_data",filename, points_per_process, d, proc_data) != 0) {
+    if (write_proc_data("proc_data", filename, points_per_process, d, proc_data) != 0) {
         printf("Rank %d: Error writing proc_data\n", self_id);
     }
 
