@@ -74,6 +74,10 @@ int main( int argc, char** argv ) {
         for (int i=0; i < n; ++i)
             for (int j=0; j < d; ++j)
                 point[i][j] = ( (double)rand() / (double)(RAND_MAX) ) * a;
+
+        if (write_proc_data("/tmp/julia_datasets", "rand.bin", n, d, point) != 0) {
+            printf("Rank %d: Error writing proc_data\n", self_id);
+        }
     }
 
     double** proc_data;
