@@ -238,7 +238,7 @@ int main( int argc, char** argv ) {
 
     sprintf(filename, "proc_data_rank_%d.bin", self_id);
 
-    if (write_proc_data(filename, points_per_process, d, proc_data) != 0) {
+    if (write_proc_data("proc_data", filename, points_per_process, d, proc_data) != 0) {
         printf("Rank %d: Error writing proc_data\n", self_id);
     }
 
