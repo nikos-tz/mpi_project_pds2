@@ -6,6 +6,7 @@ import argparse
 
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.patches import Circle
 
 
 def read_binary_file(filename):
@@ -93,6 +94,8 @@ def main():
             "This script supports only 2-dimensional points."
         )
 
+    pivot = pivot[0]
+
     # Read data from each process
     process_data = {}
 
@@ -112,18 +115,20 @@ def main():
                 f"but pivot has d = {pivot_d}."
             )
 
+        if n == 0:
+            sys.exit(f"Error: Rank {rank} contains no points.")
+
         process_data[rank] = data
 
-        print(
-            f"Rank {rank}: {n} points loaded."
-        )
+        print(f"Rank {rank}: {n} points loaded.")
 
     # Plot
-    plt.figure(figsize=(10, 8))
+    fig, ax = plt.subplots(figsize=(10, 8))
 
     for rank, data in process_data.items():
 
-        plt.scatter(
+        # Plot points belonging to this rank
+        ax.scatter(
             data[:, 0],
             data[:, 1],
             label=f"Rank {rank}",
@@ -131,10 +136,44 @@ def main():
             s=15
         )
 
+        # Calculate Euclidean distances from pivot
+        distances = np.linalg.norm(data - pivot, axis=1)
+
+        # Find point with maximum distance
+        max_index = np.argmax(distances)
+        max_distance = distances[max_index]
+        max_point = data[max_index]
+
+        print(f"\nRank {rank}:")
+        print(f"  Maximum distance: {max_distance}")
+        print(f"  Farthest point: {max_point}")
+
+        # Draw circle centered at pivot
+        circle = Circle(
+            (pivot[0], pivot[1]),
+            radius=max_distance,
+            fill=False,
+            edgecolor="red",
+            linewidth=1.5,
+            linestyle="--"
+        )
+
+        ax.add_patch(circle)
+
+        # Mark the farthest point
+        ax.scatter(
+            max_point[0],
+            max_point[1],
+            color="black",
+            marker="x",
+            s=60,
+            zorder=5
+        )
+
     # Plot pivot
-    plt.scatter(
-        pivot[0, 0],
-        pivot[0, 1],
+    ax.scatter(
+        pivot[0],
+        pivot[1],
         color="red",
         marker="x",
         s=150,
@@ -143,13 +182,16 @@ def main():
         zorder=10
     )
 
-    plt.title("Distribution of Points Among MPI Processes")
+    ax.set_title("Distribution of Points Among MPI Processes")
 
-    plt.xlabel("Dimension 1")
-    plt.ylabel("Dimension 2")
+    ax.set_xlabel("Dimension 1")
+    ax.set_ylabel("Dimension 2")
 
-    plt.legend()
-    plt.grid(True, alpha=0.3)
+    ax.legend()
+    ax.grid(True, alpha=0.3)
+
+    # Ensure circles are displayed correctly
+    ax.set_aspect("equal", adjustable="datalim")
 
     plt.tight_layout()
     plt.show()
