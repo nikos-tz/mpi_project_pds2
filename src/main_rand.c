@@ -68,7 +68,7 @@ int main(int argc, char** argv){
       for (int j=0; j < d; ++j)
         point[i][j] = ( (double)rand() / (double)(RAND_MAX) ) * a;
 
-    if(write_proc_data("/tmp/datasets", "rand.bin", n, d, point) != 0){
+    if(write_proc_data("datasets", "rand.bin", n, d, point) != 0){
       printf("Rank %d: Error writing proc_data\n", self_id);
     }
   }
