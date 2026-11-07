@@ -1,12 +1,6 @@
 #ifndef FUNCTIONS
 #define FUNCTIONS
 
-double **alloc_2d_double(int rows, int cols);
-
-float **alloc_2d_float(int rows, int cols);
-
-int **alloc_2d_int(int rows, int cols);
-
 void merge(double* arr, int l, int m, int r);
 
 void mergeSort(double* arr, int l, int r);

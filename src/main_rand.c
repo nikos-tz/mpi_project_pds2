@@ -14,6 +14,7 @@
 #include "functions.h"
 #include <src/util/output.h>
 #include <src/util/file.h>
+#include <src/aux/memory.h>
 
 int main(int argc, char** argv){
   int n, d;
