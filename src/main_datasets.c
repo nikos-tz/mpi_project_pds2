@@ -62,17 +62,9 @@ int main(int argc, char** argv){
     printf("\nEnter d: \n");
 
     ignore = scanf("%d", &d);
-
-    for(int i=leader+1; i < (leader+num_tasks); ++i)
-      MPI_Send(&n, 1, MPI_INT, i, tag, MPI_COMM_WORLD);
-
-    for(int i=leader+1; i < (leader+num_tasks); ++i)
-      MPI_Send(&d, 1, MPI_INT, i, tag, MPI_COMM_WORLD);
-  } else {
-    MPI_Recv(&n, 1, MPI_INT, leader, tag, MPI_COMM_WORLD, &status);
-
-    MPI_Recv(&d, 1, MPI_INT, leader, tag, MPI_COMM_WORLD, &status);
   }
+  MPI_Bcast(&n, 1, MPI_INT, leader, MPI_COMM_WORLD);
+  MPI_Bcast(&d, 1, MPI_INT, leader, MPI_COMM_WORLD);
 
   int points_per_process = n/num_tasks; // how many points each process will hold
 
