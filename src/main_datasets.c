@@ -11,7 +11,7 @@
 #include "write_data.h"
 #include "delete_directory.h"
 
-int main(int argc, char** argv) {
+int main(int argc, char** argv){
   /* Check that the filename was provided */
   if(argc != 2){
     fprintf(stderr, "Usage: %s <input_file>\n", argv[0]);
