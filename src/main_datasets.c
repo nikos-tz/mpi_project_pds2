@@ -23,15 +23,7 @@ void check_input(const int argc, char** argv){
 int main(int argc, char** argv){
   check_input(argc, argv);
 
-  FILE* fp = NULL;
-
-  /* Open the dataset file provided as an argument */
-  fp = fopen(argv[1], "rb");
-
-  if(fp == NULL){
-    perror("Error opening input file");
-    return EXIT_FAILURE;
-  }
+  FILE* fp = open_file(argv[1]);
 
   /* number of points and dimension of points */
   int n, d;
