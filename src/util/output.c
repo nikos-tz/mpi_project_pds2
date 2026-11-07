@@ -5,7 +5,7 @@
 #include <errno.h>
 #include <string.h>
 
-#include "write_data.h"
+#include <src/util/output.h>
 
 
 int write_proc_data(const char *directory, const char *filename, int n, int d, double **proc_data) {

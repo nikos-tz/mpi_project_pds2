@@ -1,5 +1,5 @@
-#ifndef WRITE_DATA_H
-#define WRITE_DATA_H
+#ifndef OUTPUT_H
+#define OUTPUT_H
 
 #include <stdint.h>
 

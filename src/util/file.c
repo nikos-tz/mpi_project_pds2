@@ -1,6 +1,6 @@
 #define _XOPEN_SOURCE 700
 
-#include "delete_directory.h"
+#include <src/util/file.h>
 
 #include <ftw.h>
 #include <stdio.h>

@@ -1,5 +1,5 @@
 CC = mpicc
-CFLAGS = -O3
+CFLAGS = -O3 -I.
 RM = rm -f
 
 BUILD_DIR = build
@@ -7,7 +7,7 @@ BUILD_DIR = build
 EXECUTABLES_DATASETS = $(BUILD_DIR)/main_datasets.out
 EXECUTABLES_RAND     = $(BUILD_DIR)/main_rand.out
 
-DEPENDENCIES = src/distribute_by_median.c src/functions.c src/write_data.c src/delete_directory.c
+DEPENDENCIES = src/distribute_by_median.c src/functions.c src/util/output.c src/util/file.c
 
 $(BUILD_DIR):
 	mkdir -p $(BUILD_DIR)

@@ -8,8 +8,8 @@
 #include <time.h>
 #include "distribute_by_median.h"
 #include "functions.h"
-#include "write_data.h"
-#include "delete_directory.h"
+#include <src/util/output.h>
+#include <src/util/file.h>
 
 int main(int argc, char** argv){
   /* Check that the filename was provided */
