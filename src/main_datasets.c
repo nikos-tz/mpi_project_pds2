@@ -13,12 +13,15 @@
 #include <src/aux/math.h>
 #include <src/aux/sort.h>
 
-int main(int argc, char** argv){
-  /* Check that the filename was provided */
+void check_input(const int argc, char** argv){
   if(argc != 2){
     fprintf(stderr, "Usage: %s <input_file>\n", argv[0]);
-    return EXIT_FAILURE;
+    exit(EXIT_FAILURE);
   }
+}
+
+int main(int argc, char** argv){
+  check_input(argc, argv);
 
   FILE* fp = NULL;
 
