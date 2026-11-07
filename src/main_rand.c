@@ -11,10 +11,11 @@
 #include <stdlib.h>
 #include <time.h>
 #include "distribute_by_median.h"
-#include "functions.h"
 #include <src/util/output.h>
 #include <src/util/file.h>
 #include <src/aux/memory.h>
+#include <src/aux/math.h>
+#include <src/aux/sort.h>
 
 int main(int argc, char** argv){
   int n, d;

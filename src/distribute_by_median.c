@@ -9,7 +9,6 @@
 #include <mpi.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include "functions.h"
 #include <sys/time.h>
 #include <src/aux/memory.h>
 #include <src/aux/sort.h>
