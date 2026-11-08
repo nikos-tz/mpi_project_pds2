@@ -60,6 +60,25 @@ void dataset_size(const int self_id, const int leader, FILE* fp, int64_t* n_file
   MPI_Bcast(d, 1, MPI_INT, leader, MPI_COMM_WORLD);
 }
 
+void read_dataset(const int points_per_process, const int self_id, const int64_t d_file, const int d, FILE* fp, double** proc_data){
+  for(int i = 0; i < points_per_process; ++i){
+    /* Calculate the position of this process's point in the file */
+    long offset = 2 * sizeof(int64_t) +
+      (self_id * points_per_process * d_file +
+      i * d_file) * sizeof(double);
+
+    if(fseek(fp, offset, SEEK_SET) != 0){
+      fprintf(stderr, "Process %d: fseek failed\n", self_id);
+      MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+    }
+
+    if(fread(proc_data[i], sizeof(double), d, fp) != d){
+      fprintf(stderr, "Process %d: fread failed\n", self_id);
+      MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+    }
+  }
+}
+
 int main(int argc, char** argv){
   int ignore = 0; //just to ignore the return values of some functions
 
@@ -87,22 +106,7 @@ int main(int argc, char** argv){
   double** proc_data;
   proc_data = alloc_2d_double(points_per_process, d);
 
-  for(int i = 0; i < points_per_process; ++i){
-    /* Calculate the position of this process's point in the file */
-    long offset = 2 * sizeof(int64_t) +
-      (self_id * points_per_process * d_file +
-      i * d_file) * sizeof(double);
-
-    if(fseek(fp, offset, SEEK_SET) != 0){
-      fprintf(stderr, "Process %d: fseek failed\n", self_id);
-      MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
-    }
-
-    if(fread(proc_data[i], sizeof(double), d, fp) != d){
-      fprintf(stderr, "Process %d: fread failed\n", self_id);
-      MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
-    }
-  }
+  read_dataset(points_per_process, self_id, d_file, d, fp, proc_data);
 
   fclose(fp);
 
