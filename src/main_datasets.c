@@ -79,20 +79,16 @@ void read_dataset(const int points_per_process, const int self_id, const int64_t
   }
 }
 
-void get_pivot(
-  const int d, const int self_id, const int leader, double** proc_data, const int num_tasks, const int tag, MPI_Status* status, double** pivot
-){
+void get_pivot(const int d, const int self_id, const int leader, double** proc_data, double** pivot){
   *pivot = (double*) malloc(d * sizeof(double));
 
   if(self_id == leader){
-    for(int i=0; i < d; ++i)
+    for(int i=0; i < d; ++i){
       (*pivot)[i] = proc_data[0][i];
-
-    for(int i = leader + 1; i < (leader+num_tasks); ++i)
-      MPI_Send(*pivot, d, MPI_DOUBLE, i, tag, MPI_COMM_WORLD);
-  } else {
-    MPI_Recv(*pivot, d, MPI_DOUBLE, leader, tag, MPI_COMM_WORLD, status);
+    }
   }
+
+  MPI_Bcast(*pivot, d, MPI_DOUBLE, leader, MPI_COMM_WORLD);
 }
 
 int main(int argc, char** argv){
@@ -124,7 +120,7 @@ int main(int argc, char** argv){
   fclose(fp);
 
   double* pivot = NULL;
-  get_pivot(d, self_id, leader, proc_data, num_tasks, tag, &status, &pivot);
+  get_pivot(d, self_id, leader, proc_data, &pivot);
 
   /**
    * We call distribute_by_median() multiple times in order to distribute points
