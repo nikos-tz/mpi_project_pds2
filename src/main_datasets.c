@@ -32,19 +32,29 @@ void dataset_size(const int self_id, const int leader, FILE* fp, int64_t* n_file
    * and then lets the user to enter their own n,d values which must be powers of 2
    * and also less than N,D. Then send n,d to the other tasks.
    */
-  if(self_id == leader){
-    file_read_int64(d_file, 1, fp);
-    file_read_int64(n_file, 1, fp);
+  if (fread(d_file, sizeof(int64_t), 1, fp) != 1) {
+    fprintf(stderr, "Process %d: fread failed\n", self_id);
+    MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+  }
+  if (fread(n_file, sizeof(int64_t), 1, fp) != 1) {
+    fprintf(stderr, "Process %d: fread failed\n", self_id);
+    MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+  }
 
+  if(self_id == leader){
     printf("N = %ld and D = %ld\n", *n_file, *d_file);
 
     printf("Enter n: \n");
-
-    scan_one_int(n);
+    if (scanf("%d", n) != 1) {
+      fprintf(stderr, "Process %d: scanf failed\n", self_id);
+      MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+    }
 
     printf("\nEnter d: \n");
-
-    scan_one_int(d);
+    if (scanf("%d", d) != 1) {
+      fprintf(stderr, "Process %d: scanf failed\n", self_id);
+      MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+    }
   }
   MPI_Bcast(n, 1, MPI_INT, leader, MPI_COMM_WORLD);
   MPI_Bcast(d, 1, MPI_INT, leader, MPI_COMM_WORLD);
@@ -77,31 +87,21 @@ int main(int argc, char** argv){
   double** proc_data;
   proc_data = alloc_2d_double(points_per_process, d);
 
-  double** sending_data = NULL;
+  for(int i = 0; i < points_per_process; ++i){
+    /* Calculate the position of this process's point in the file */
+    long offset = 2 * sizeof(int64_t) +
+      (self_id * points_per_process * d_file +
+      i * d_file) * sizeof(double);
 
-  /**
-   * Now leader reads the points from the file and then sends them to the other tasks
-   */
-  if(self_id == leader) {
-    sending_data = alloc_2d_double(points_per_process, d);
-
-    for(int i=0; i < points_per_process; ++i){
-      /* we ignore some values from the file, because our n or d could be less than the N,D of the file */
-      fseek(fp, (2*sizeof(int64_t) + (leader*points_per_process*d_file + i*d_file)*sizeof(double)), SEEK_SET);
-
-      ignore = fread(&proc_data[i][0], sizeof(double), d, fp);
+    if(fseek(fp, offset, SEEK_SET) != 0){
+      fprintf(stderr, "Process %d: fseek failed\n", self_id);
+      MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
     }
 
-    for(int i=leader+1; i < (leader+num_tasks); ++i){
-      for(int j=0; j < points_per_process; ++j){
-        fseek(fp, (2*sizeof(int64_t) + (i*points_per_process*d_file + j*d_file)*sizeof(double)), SEEK_SET);
-        ignore = fread(&sending_data[j][0], sizeof(double), d, fp);
-      }
-
-      MPI_Send(&(sending_data[0][0]), d*points_per_process, MPI_DOUBLE, i, tag, MPI_COMM_WORLD);
+    if(fread(proc_data[i], sizeof(double), d, fp) != d){
+      fprintf(stderr, "Process %d: fread failed\n", self_id);
+      MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
     }
-  } else {
-    MPI_Recv(&(proc_data[0][0]), d*points_per_process, MPI_DOUBLE, leader, tag, MPI_COMM_WORLD, &status);
   }
 
   fclose(fp);
@@ -238,9 +238,6 @@ int main(int argc, char** argv){
   /* free all the dynamically allocated variables  */
 
   if(self_id == leader){
-    free(sending_data[0]);
-    free(sending_data);
-
     free(all_max_distance);
     free(all_min_distance);
   }
