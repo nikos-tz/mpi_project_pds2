@@ -26,15 +26,36 @@ void initialise_communicator(int argc, char** argv, int* num_tasks, int* self_id
   MPI_Comm_rank (MPI_COMM_WORLD, self_id);
 }
 
+void dataset_size(const int self_id, const int leader, FILE* fp, int64_t* n_file, int64_t* d_file, int* n, int* d){
+  /**
+   * The leader reads the dataset file. At first, it gets the N,D from the file, displays them
+   * and then lets the user to enter their own n,d values which must be powers of 2
+   * and also less than N,D. Then send n,d to the other tasks.
+   */
+  if(self_id == leader){
+    file_read_int64(d_file, 1, fp);
+    file_read_int64(n_file, 1, fp);
+
+    printf("N = %ld and D = %ld\n", *n_file, *d_file);
+
+    printf("Enter n: \n");
+
+    scan_one_int(n);
+
+    printf("\nEnter d: \n");
+
+    scan_one_int(d);
+  }
+  MPI_Bcast(n, 1, MPI_INT, leader, MPI_COMM_WORLD);
+  MPI_Bcast(d, 1, MPI_INT, leader, MPI_COMM_WORLD);
+}
+
 int main(int argc, char** argv){
   int ignore = 0; //just to ignore the return values of some functions
 
   check_input(argc, argv);
 
   FILE* fp = open_file(argv[1]);
-
-  /* number of points and dimension of points */
-  int n, d;
 
   /* variables for the communicator */
   MPI_Status status;
@@ -45,29 +66,10 @@ int main(int argc, char** argv){
 
   initialise_communicator(argc, argv, &num_tasks, &self_id);
 
+  /* number of points and dimension of points */
   int64_t n_file, d_file;
-
-  /**
-   * The leader reads the dataset file. At first, it gets the N,D from the file, displays them
-   * and then lets the user to enter their own n,d values which must be powers of 2
-   * and also less than N,D. Then send n,d to the other tasks.
-   */
-  if(self_id == leader){
-    ignore = fread(&d_file, sizeof(int64_t), 1, fp);
-    ignore = fread(&n_file, sizeof(int64_t), 1, fp);
-
-    printf("N = %ld and D = %ld\n", n_file, d_file);
-
-    printf("Enter n: \n");
-
-    ignore = scanf("%d", &n);
-
-    printf("\nEnter d: \n");
-
-    ignore = scanf("%d", &d);
-  }
-  MPI_Bcast(&n, 1, MPI_INT, leader, MPI_COMM_WORLD);
-  MPI_Bcast(&d, 1, MPI_INT, leader, MPI_COMM_WORLD);
+  int n, d;
+  dataset_size(self_id, leader, fp, &n_file, &d_file, &n, &d);
 
   int points_per_process = n/num_tasks; // how many points each process will hold
 

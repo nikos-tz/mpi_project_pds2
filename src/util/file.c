@@ -34,3 +34,17 @@ FILE* open_file(char* filename){
 
   return fp;
 }
+
+void file_read_int64(int64_t *value, size_t count, FILE *fp){
+  if (fread(value, sizeof(int64_t), count, fp) != count) {
+    perror("Error reading file");
+    exit(EXIT_FAILURE);
+  }
+}
+
+void scan_one_int(int* value){
+  if (scanf("%d", value) != 1) {
+    fprintf(stderr, "Error while reading =from stdin\n");
+    exit(EXIT_FAILURE);
+  }
+}
