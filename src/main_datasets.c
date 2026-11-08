@@ -20,7 +20,15 @@ void check_input(const int argc, char** argv){
   }
 }
 
+void initialise_communicator(int argc, char** argv, int* num_tasks, int* self_id){
+  MPI_Init(&argc, &argv);
+  MPI_Comm_size (MPI_COMM_WORLD, num_tasks);
+  MPI_Comm_rank (MPI_COMM_WORLD, self_id);
+}
+
 int main(int argc, char** argv){
+  int ignore = 0; //just to ignore the return values of some functions
+
   check_input(argc, argv);
 
   FILE* fp = open_file(argv[1]);
@@ -29,20 +37,15 @@ int main(int argc, char** argv){
   int n, d;
 
   /* variables for the communicator */
+  MPI_Status status;
   int tag = 1;
+  int leader = 0;
   int num_tasks;
   int self_id;
-  int leader = 0;
 
-  /* initialise the communicator */
-  MPI_Status status;
-  MPI_Init(&argc, &argv);
-  MPI_Comm_size (MPI_COMM_WORLD,&num_tasks);
-  MPI_Comm_rank (MPI_COMM_WORLD,&self_id);
+  initialise_communicator(argc, argv, &num_tasks, &self_id);
 
   int64_t n_file, d_file;
-
-  int ignore = 0; //just to ignore the return values of some functions
 
   /**
    * The leader reads the dataset file. At first, it gets the N,D from the file, displays them
