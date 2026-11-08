@@ -44,7 +44,7 @@ void file_read_int64(int64_t *value, size_t count, FILE *fp){
 
 void scan_one_int(int* value){
   if (scanf("%d", value) != 1) {
-    fprintf(stderr, "Error while reading =from stdin\n");
+    fprintf(stderr, "Error while reading from stdin\n");
     exit(EXIT_FAILURE);
   }
 }
