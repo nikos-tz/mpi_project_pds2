@@ -79,12 +79,24 @@ void read_dataset(const int points_per_process, const int self_id, const int64_t
   }
 }
 
+void get_pivot(
+  const int d, const int self_id, const int leader, double** proc_data, const int num_tasks, const int tag, MPI_Status* status, double** pivot
+){
+  *pivot = (double*) malloc(d * sizeof(double));
+
+  if(self_id == leader){
+    for(int i=0; i < d; ++i)
+      (*pivot)[i] = proc_data[0][i];
+
+    for(int i = leader + 1; i < (leader+num_tasks); ++i)
+      MPI_Send(*pivot, d, MPI_DOUBLE, i, tag, MPI_COMM_WORLD);
+  } else {
+    MPI_Recv(*pivot, d, MPI_DOUBLE, leader, tag, MPI_COMM_WORLD, status);
+  }
+}
+
 int main(int argc, char** argv){
-  int ignore = 0; //just to ignore the return values of some functions
-
   check_input(argc, argv);
-
-  FILE* fp = open_file(argv[1]);
 
   /* variables for the communicator */
   MPI_Status status;
@@ -92,15 +104,16 @@ int main(int argc, char** argv){
   int leader = 0;
   int num_tasks;
   int self_id;
-
   initialise_communicator(argc, argv, &num_tasks, &self_id);
+
+  FILE* fp = open_file(argv[1]);
 
   /* number of points and dimension of points */
   int64_t n_file, d_file;
   int n, d;
   dataset_size(self_id, leader, fp, &n_file, &d_file, &n, &d);
 
-  int points_per_process = n/num_tasks; // how many points each process will hold
+  int points_per_process = n/num_tasks;
 
   /* declare a 2D array for our points, each row is a point */
   double** proc_data;
@@ -110,23 +123,8 @@ int main(int argc, char** argv){
 
   fclose(fp);
 
-  /*********/
-  /* Get and send the pivot*/
-  /*********/
-
   double* pivot = NULL;
-
-  pivot = (double*) malloc(d * sizeof(double));
-
-  if(self_id == leader){
-    for(int i=0; i < d; ++i)
-      pivot[i] = proc_data[0][i];
-
-    for(int i = leader + 1; i < (leader+num_tasks); ++i)
-      MPI_Send(&(pivot[0]), d, MPI_DOUBLE, i, tag, MPI_COMM_WORLD);
-  } else {
-    MPI_Recv(&(pivot[0]), d, MPI_DOUBLE, leader, tag, MPI_COMM_WORLD, &status);
-  }
+  get_pivot(d, self_id, leader, proc_data, num_tasks, tag, &status, &pivot);
 
   /**
    * We call distribute_by_median() multiple times in order to distribute points
@@ -232,7 +230,6 @@ int main(int argc, char** argv){
   }
 
   /* Only the leader writes the pivot */
-
   if(self_id == leader){
     if(write_pivot("pivot.bin", d, pivot) != 0){
       printf("Error writing pivot\n");
