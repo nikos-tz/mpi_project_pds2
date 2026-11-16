@@ -26,56 +26,34 @@ void initialise_communicator(int argc, char** argv, int* num_tasks, int* self_id
   MPI_Comm_rank (MPI_COMM_WORLD, self_id);
 }
 
-void dataset_size(const int self_id, const int leader, FILE* fp, int64_t* n_file, int64_t* d_file, int* n, int* d){
-  /**
-   * The leader reads the dataset file. At first, it gets the N,D from the file, displays them
-   * and then lets the user to enter their own n,d values which must be powers of 2
-   * and also less than N,D. Then send n,d to the other tasks.
-   */
-  if (fread(d_file, sizeof(int64_t), 1, fp) != 1) {
+void dataset_size(const int self_id, const int leader, FILE* fp, int64_t* n, int64_t* d){
+  if (fread(d, sizeof(int64_t), 1, fp) != 1) {
     fprintf(stderr, "Process %d: fread failed\n", self_id);
     MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
   }
-  if (fread(n_file, sizeof(int64_t), 1, fp) != 1) {
+  if (fread(n, sizeof(int64_t), 1, fp) != 1) {
     fprintf(stderr, "Process %d: fread failed\n", self_id);
     MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
   }
 
   if(self_id == leader){
-    printf("N = %ld and D = %ld\n", *n_file, *d_file);
-
-    printf("Enter n: \n");
-    if (scanf("%d", n) != 1) {
-      fprintf(stderr, "Process %d: scanf failed\n", self_id);
-      MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
-    }
-
-    printf("\nEnter d: \n");
-    if (scanf("%d", d) != 1) {
-      fprintf(stderr, "Process %d: scanf failed\n", self_id);
-      MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
-    }
+    printf("N = %ld and D = %ld\n", *n, *d);
   }
-  MPI_Bcast(n, 1, MPI_INT, leader, MPI_COMM_WORLD);
-  MPI_Bcast(d, 1, MPI_INT, leader, MPI_COMM_WORLD);
 }
 
-void read_dataset(const int points_per_process, const int self_id, const int64_t d_file, const int d, FILE* fp, double** proc_data){
-  for(int i = 0; i < points_per_process; ++i){
-    /* Calculate the position of this process's point in the file */
-    long offset = 2 * sizeof(int64_t) +
-      (self_id * points_per_process * d_file +
-      i * d_file) * sizeof(double);
+void read_dataset(const int points_per_process, const int self_id, const int64_t d, FILE* fp, double** proc_data){
+  /* Calculate the position of this process's first point in the file */
+  long offset = 2 * sizeof(int64_t) +
+    self_id * points_per_process * d * sizeof(double);
 
-    if(fseek(fp, offset, SEEK_SET) != 0){
-      fprintf(stderr, "Process %d: fseek failed\n", self_id);
-      MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
-    }
+  if(fseek(fp, offset, SEEK_SET) != 0){
+    fprintf(stderr, "Process %d: fseek failed\n", self_id);
+    MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
+  }
 
-    if(fread(proc_data[i], sizeof(double), d, fp) != d){
-      fprintf(stderr, "Process %d: fread failed\n", self_id);
-      MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
-    }
+  if(fread(proc_data[0], sizeof(double), points_per_process*d, fp) != points_per_process*d){
+    fprintf(stderr, "Process %d: fread failed\n", self_id);
+    MPI_Abort(MPI_COMM_WORLD, EXIT_FAILURE);
   }
 }
 
@@ -105,9 +83,8 @@ int main(int argc, char** argv){
   FILE* fp = open_file(argv[1]);
 
   /* number of points and dimension of points */
-  int64_t n_file, d_file;
-  int n, d;
-  dataset_size(self_id, leader, fp, &n_file, &d_file, &n, &d);
+  int64_t n, d;
+  dataset_size(self_id, leader, fp, &n, &d);
 
   int points_per_process = n/num_tasks;
 
@@ -115,7 +92,7 @@ int main(int argc, char** argv){
   double** proc_data;
   proc_data = alloc_2d_double(points_per_process, d);
 
-  read_dataset(points_per_process, self_id, d_file, d, fp, proc_data);
+  read_dataset(points_per_process, self_id, d, fp, proc_data);
 
   fclose(fp);
 
